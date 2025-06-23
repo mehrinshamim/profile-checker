@@ -10,7 +10,7 @@ class GeminiAgent:
     def __init__(self, api_key: str, serp_api_key: str):
         """Initialize Gemini Agent with ReAct capabilities"""
         genai.configure(api_key=api_key)
-        self.model = genai.GenerativeModel('gemini-pro')
+        self.model = genai.GenerativeModel('gemini-1.5-flash')
         self.serp_service = SerpService(serp_api_key)
         self.max_iterations = 5
         
