@@ -6,3 +6,4 @@ folium
 Pillow
 xyzservices
 opencv-python
+google-generativeai

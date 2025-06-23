@@ -53,3 +53,8 @@ def create_folium_map(landmarks):
         coords = landmark.locations[0].lat_lng
         folium.Marker([coords.latitude, coords.longitude], tooltip=landmark.description).add_to(m)
     return m
+
+
+def detect_text(client, vision_image):
+    response = client.text_detection(image=vision_image)
+    return response.text_annotations
