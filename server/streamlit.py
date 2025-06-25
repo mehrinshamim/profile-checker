@@ -2,9 +2,16 @@ import streamlit as st
 from streamlit_folium import folium_static
 from services.gvision_folium_service import (
     load_credentials, prepare_image, detect_landmarks, detect_logos,
-    detect_objects, detect_web_entities, create_folium_map, detect_text
+    detect_objects, detect_web_entities, create_folium_map, detect_text, ImageMetadataPIIAnalyzer, create_metadata_map
 )
 from services.gemini_agent import GeminiAgent  # <-- Add this import
+import xyzservices.providers as xyz
+import folium
+import io
+from PIL import Image
+import numpy as np
+import cv2
+import json
 
 st.set_page_config(page_title="Reverse image search", page_icon="🧪", layout="wide")
 st.title("🎯 Reverse image search")
@@ -36,9 +43,9 @@ if not uploaded_image:
 # Prepare image
 image_bytes, vision_image, pil_image = prepare_image(uploaded_image)
 
-# Create tabbed interface (add a 5th tab for AI)
-tab1, tab2, tab3, tab4, tab5 = st.tabs([
-    "📍 Landmarks", "🏷️ Logos", "📦 Objects", "🌐 Web Entities", "🤖 Text & AI Analysis"
+# Create tabbed interface (add a 6th tab for PII)
+tab1, tab2, tab3, tab4, tab5, tab6 = st.tabs([
+    "📍 Landmarks", "🏷️ Logos", "📦 Objects", "🌐 Web Entities", "🤖 Text & AI Analysis", "🕵️ PII Analysis"
 ])
 
 # --- LANDMARK DETECTION ---
@@ -120,3 +127,137 @@ with tab5:
             st.info("Please provide both Gemini and SerpAPI keys in the sidebar to enable AI analysis.")
     else:
         st.warning("No text detected in the image.")
+
+# --- PII ANALYSIS ---
+with tab6:
+    st.header("🕵️ Comprehensive Privacy Analysis")
+    analyzer = ImageMetadataPIIAnalyzer()
+    analysis_result = analyzer.analyze_comprehensive_pii(image_bytes)
+
+    if 'error' not in analysis_result:
+        risk_assessment = analysis_result['risk_assessment']
+        risk_colors = {
+            'CRITICAL': '🔴', 'HIGH': '🟠', 'MEDIUM': '🟡',
+            'LOW': '🟢', 'MINIMAL': '✅'
+        }
+        st.subheader(f"{risk_colors.get(risk_assessment['level'], '⚪')} Overall Privacy Risk: {risk_assessment['level']}")
+        st.write(f"**Risk Score**: {risk_assessment.get('score', 0)}/10")
+        st.write(f"**Summary**: {risk_assessment['summary']}")
+        
+        findings = analysis_result['findings']
+        if findings:
+            st.subheader('⚠️ Detailed Privacy Findings')
+            categories = {}
+            for finding in findings:
+                category = finding.get('category', 'Other')
+                if category not in categories:
+                    categories[category] = []
+                categories[category].append(finding)
+            
+            for category, category_findings in categories.items():
+                with st.expander(f"📂 {category} Privacy Risks ({len(category_findings)} found)", expanded=True):
+                    for finding in category_findings:
+                        risk_icon = risk_colors.get(finding['risk'], '⚪')
+                        st.write(f"{risk_icon} **{finding['type']}** ({finding['risk']} Risk)")
+                        st.write(f"**Data Found**: {finding['data']}")
+                        st.write(f"**Privacy Concern**: {finding['concern']}")
+                        if 'recommendation' in finding:
+                            st.write(f"**Recommendation**: {finding['recommendation']}")
+                        st.write("")
+            
+            exif_data = analysis_result.get('exif_data', {})
+            if exif_data:
+                with st.expander("📋 Raw EXIF Data", expanded=False):
+                    for key, value in exif_data.items():
+                        if key != 'GPSInfo':
+                            st.write(f"**{key}**: {value}")
+                        else:
+                            st.write(f"**GPS Information**:")
+                            for gps_key, gps_value in value.items():
+                                st.write(f"  - {gps_key}: {gps_value}")
+            
+            metadata_map = create_metadata_map(exif_data)
+            if metadata_map:
+                st.subheader('📍 GPS Location from Metadata')
+                st.warning("⚠️ This map shows the exact location where your photo was taken!")
+                folium_static(metadata_map)
+        else:
+            st.success("✅ No significant privacy risks found in metadata")
+
+        metadata_summary = analysis_result['metadata_summary']
+        st.subheader('📊 Metadata Summary')
+        col1, col2, col3 = st.columns(3)
+        with col1:
+            st.metric("Image Format", metadata_summary.get('format', 'Unknown'))
+        with col2:
+            size = metadata_summary.get('size', [0,0])
+            st.metric("Image Size", f"{size[0]}x{size[1]}")
+        with col3:
+            st.metric("Metadata Fields", metadata_summary.get('total_metadata_fields', 0))
+    else:
+        st.error(f"❌ Error analyzing metadata: {analysis_result['error']}")
+
+# Existing Vision API analysis
+st.write('-------------------')
+st.subheader('📤 Uploaded image and detected location:')
+col1, col2 = st.columns(2)
+with col1:
+    st.image(pil_image, use_container_width=True, caption='')
+
+landmarks = detect_landmarks(client, vision_image)
+if landmarks:
+    with col2:
+        folium_map = create_folium_map(landmarks)
+        folium_static(folium_map)
+    st.write('-------------------')
+    st.subheader('📍 Location information:')
+    for landmark in landmarks:
+        st.write(f"- **Coordinates**: {landmark.locations[0].lat_lng.latitude}, {landmark.locations[0].lat_lng.longitude}")
+        st.write(f"- **Location**: {landmark.description}")
+        st.write('')
+else:
+    with col2:
+        st.write('❌ No landmarks detected.')
+
+st.write('-------------------')
+logos = detect_logos(client, vision_image)
+if logos:
+    st.subheader('👓 Logos Detected:')
+    for logo in logos:
+        st.markdown(f'- {logo.description}')
+else:
+    st.write('❌ No Logos Detected.')
+
+st.write('-------------------')
+objects, np_image = detect_objects(client, vision_image, image_bytes)
+if objects:
+    st.subheader('🧳 Objects Detected:')
+    st.image(np_image, channels="RGB")
+else:
+    st.write('❌ No Objects Detected.')
+
+st.write('-------------------')
+web_detection = detect_web_entities(client, vision_image)
+if web_detection:
+    st.subheader('🌐 Detected web entities:')
+    if web_detection.web_entities:
+        st.write([e.description for e in web_detection.web_entities if e.description])
+    else:
+        st.write('❌ No web entities detected.')
+
+    st.subheader('🔗 Pages with matching images:')
+    if web_detection.pages_with_matching_images:
+        st.write([p.url for p in web_detection.pages_with_matching_images])
+    else:
+        st.write('❌ No pages with matching images found.')
+    
+    st.subheader('🖼️ Visually similar images:')
+    if web_detection.visually_similar_images:
+        similar_images = [img.url for img in web_detection.visually_similar_images if img.url]
+        cols = st.columns(3)
+        for i, url in enumerate(similar_images):
+            cols[i % 3].image(url, use_container_width=True, caption=url)
+    else:
+        st.write('❌ No visually similar images found.')
+else:
+    st.write('❌ No web entities detected.')
