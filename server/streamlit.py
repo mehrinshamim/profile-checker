@@ -2,8 +2,9 @@ import streamlit as st
 from streamlit_folium import folium_static
 from services.gvision_folium_service import (
     load_credentials, prepare_image, detect_landmarks, detect_logos,
-    detect_objects, detect_web_entities, create_folium_map, detect_text, ImageMetadataPIIAnalyzer, create_metadata_map
+    detect_objects, detect_web_entities, create_folium_map, detect_text
 )
+from services.metadataanalysis import ImageMetadataPIIAnalyzer,create_metadata_map
 from services.gemini_agent import GeminiAgent  # <-- Add this import
 import xyzservices.providers as xyz
 import folium
@@ -197,67 +198,4 @@ with tab6:
     else:
         st.error(f"❌ Error analyzing metadata: {analysis_result['error']}")
 
-# Existing Vision API analysis
-st.write('-------------------')
-st.subheader('📤 Uploaded image and detected location:')
-col1, col2 = st.columns(2)
-with col1:
-    st.image(pil_image, use_container_width=True, caption='')
 
-landmarks = detect_landmarks(client, vision_image)
-if landmarks:
-    with col2:
-        folium_map = create_folium_map(landmarks)
-        folium_static(folium_map)
-    st.write('-------------------')
-    st.subheader('📍 Location information:')
-    for landmark in landmarks:
-        st.write(f"- **Coordinates**: {landmark.locations[0].lat_lng.latitude}, {landmark.locations[0].lat_lng.longitude}")
-        st.write(f"- **Location**: {landmark.description}")
-        st.write('')
-else:
-    with col2:
-        st.write('❌ No landmarks detected.')
-
-st.write('-------------------')
-logos = detect_logos(client, vision_image)
-if logos:
-    st.subheader('👓 Logos Detected:')
-    for logo in logos:
-        st.markdown(f'- {logo.description}')
-else:
-    st.write('❌ No Logos Detected.')
-
-st.write('-------------------')
-objects, np_image = detect_objects(client, vision_image, image_bytes)
-if objects:
-    st.subheader('🧳 Objects Detected:')
-    st.image(np_image, channels="RGB")
-else:
-    st.write('❌ No Objects Detected.')
-
-st.write('-------------------')
-web_detection = detect_web_entities(client, vision_image)
-if web_detection:
-    st.subheader('🌐 Detected web entities:')
-    if web_detection.web_entities:
-        st.write([e.description for e in web_detection.web_entities if e.description])
-    else:
-        st.write('❌ No web entities detected.')
-
-    st.subheader('🔗 Pages with matching images:')
-    if web_detection.pages_with_matching_images:
-        st.write([p.url for p in web_detection.pages_with_matching_images])
-    else:
-        st.write('❌ No pages with matching images found.')
-    
-    st.subheader('🖼️ Visually similar images:')
-    if web_detection.visually_similar_images:
-        similar_images = [img.url for img in web_detection.visually_similar_images if img.url]
-        cols = st.columns(3)
-        for i, url in enumerate(similar_images):
-            cols[i % 3].image(url, use_container_width=True, caption=url)
-    else:
-        st.write('❌ No visually similar images found.')
-else:
-    st.write('❌ No web entities detected.')
