@@ -37,6 +37,41 @@ export default function Home() {
           </li>
         </ul>
       </nav>
+
+      {/* Hero Section */}
+      <section className="flex flex-col gap-10 ml-8 sm:ml-20 px-6 sm:px-12 pt-24 relative max-w-2xl mt-40">
+        {/* Headline */}
+        <h1
+          className="text-white text-[48px] sm:text-[56px] font-normal leading-[100%]"
+          style={{ fontFamily: "'Fjalla One', sans-serif" }}
+        >
+          <span className="whitespace-nowrap">No more <span className="text-[#FF99FF]">God when?</span></span>
+          <br />
+          <span className="block mt-4 whitespace-nowrap">Meet your Perfect Match</span>
+        </h1>
+
+        {/* CTA Button */}
+        <a
+          href="#"
+          className="inline-flex items-center justify-center bg-gradient-to-r from-[#D67BFF] to-[#FF9EFF] text-white font-semibold text-lg sm:text-xl px-10 py-4 rounded-full shadow-md hover:opacity-90 transition-opacity w-max"
+        >
+          Get started →
+        </a>
+
+        {/* Plane with dotted path */}
+        <div className="absolute -bottom-70 left-2 z-0">
+          
+
+          {/* Plane Icon */}
+          <Image
+            src="/assets/plane.png"
+            alt="plane icon"
+            width={4000}
+            height={4000}
+            className="mt-10"
+          />
+        </div>
+      </section>
     </div>
   );
 }
