@@ -13,14 +13,14 @@ export default function Navbar() {
           className="mt-2"
           priority
         />
-        <span className="text-white text-[30px] font-normal capitalize leading-[100%] px-2 self-center">
-          <span className="text-white">MIS</span>
-          <span className="text-[#FF99FF]">MATCHED</span>
-        </span>
+                  <span className="text-white text-[30px] font-normal capitalize leading-[100%] px-2 self-center font-marcellus">
+            <span className="text-white">MIS</span>
+            <span className="text-[#FF99FF]">MATCHED</span>
+          </span>
       </div>
 
       {/* Navigation links */}
-      <ul className="hidden lg:flex items-center gap-10 text-white font-normal text-[25px] leading-[100%]">
+      <ul className="hidden lg:flex items-center gap-10 text-white font-fjalla-one text-[25px] leading-[100%]">
         <li className="hover:text-purple-400 transition-colors cursor-pointer text-white flex items-center justify-center px-4">Home</li>
         <li className="hover:text-purple-400 transition-colors cursor-pointer text-white flex items-center justify-center px-4">Features</li>
         <li className="hover:text-purple-400 transition-colors cursor-pointer text-white flex items-center justify-center px-4">Contact</li>

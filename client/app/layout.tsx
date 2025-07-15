@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Geist, Geist_Mono, Marcellus ,Fjalla_One} from "next/font/google";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -12,7 +12,19 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
-export const metadata: Metadata = {
+const marcellus = Marcellus({
+  variable: "--font-marcellus",
+  subsets: ["latin"],
+  weight: "400",
+});
+
+const fjallaOne = Fjalla_One({
+  variable: "--font-fjalla-one",
+  subsets: ["latin"],
+  weight: "400",
+});
+
+  export const metadata: Metadata = {
   title: "MISMATCHED",
   description: "Verify dating profiles, detect red flags, and date with confidence. Stay protected with MISMATCHED."
 };
@@ -25,7 +37,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+        className={`${geistSans.variable} ${geistMono.variable} ${marcellus.variable} ${fjallaOne.variable} antialiased`}
       >
         {children}
       </body>
