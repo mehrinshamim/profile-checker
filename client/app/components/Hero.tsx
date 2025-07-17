@@ -23,7 +23,7 @@ export default function Hero() {
         {/* CTA Button */}
         <button
           onClick={() => router.push("/auth")}
-          className="font-fjalla-one inline-flex items-center justify-center bg-gradient-to-r from-[#D67BFF] to-[#FF9EFF] text-white font-semibold text-lg sm:text-xl px-10 py-4 rounded-full shadow-md hover:opacity-90 transition-opacity w-max"
+          className="font-fjalla-one inline-flex items-center justify-center bg-gradient-to-r from-[#D67BFF] to-[#FF9EFF] text-white font-semibold text-lg sm:text-xl px-10 py-4 rounded-full shadow-md hover:opacity-90 transition-opacity w-max relative z-50"
         >
           Get started →
         </button>
