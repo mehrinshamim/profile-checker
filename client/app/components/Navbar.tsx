@@ -32,21 +32,7 @@ export default function Navbar() {
           </span>
       </div>
 
-      {/* Navigation links */}
-      <ul className="hidden lg:flex items-center gap-10 text-white font-fjalla-one text-[25px] leading-[100%]">
-        <li className="hover:text-purple-400 transition-colors cursor-pointer text-white flex items-center justify-center px-4">Home</li>
-        <li className="hover:text-purple-400 transition-colors cursor-pointer text-white flex items-center justify-center px-4">Features</li>
-        <li className="hover:text-purple-400 transition-colors cursor-pointer text-white flex items-center justify-center px-4">Contact</li>
-        <li className="hover:text-purple-400 transition-colors cursor-pointer text-white flex items-center justify-center px-4" onClick={handleLogin}>Login</li>
-        <li className="flex items-center justify-center px-4">
-          <button
-            onClick={handleSignup}
-            className="bg-purple-400 text-white font-semibold text-[25px] px-8 py-2 rounded-full hover:bg-purple-500 transition-colors"
-          >
-            Register
-          </button>
-        </li>
-      </ul>
+    
     </nav>
   );
 } 
