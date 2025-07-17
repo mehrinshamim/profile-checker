@@ -35,24 +35,37 @@ export default function LeftSide() {
       <div className="flex items-center justify-center h-full px-12">
         <div className="text-center max-w-2xl">
           {/* Main Heading */}
-          <h1 className="text-black text-[48px] font-bold leading-tight mb-16 font-fjalla-one">
+          <h1 className="text-black text-[48px] font-bold leading-tight mb-55 font-fjalla-one">
             "Your Love Story Begins Here.<br />
             Let's Make It Unforgettable."
           </h1>
 
-          {/* Glassmorphic Card */}
-          <div className="relative">
-            <div 
-              className="bg-white/20 backdrop-blur-lg border border-white/30 rounded-3xl px-8 py-6 shadow-xl"
-              style={{ background: 'rgba(255, 255, 255, 0.2)' }}
+          {/* Bubble Chat Card */}
+          <div className="relative inline-block -mt-2">
+            {/* Speech bubble body */}
+            <div
+              className="bg-white/20 backdrop-blur-lg border border-white/30 rounded-[60px] px-20 py-8 shadow-xl flex items-center gap-12 h-[120px]"
+              style={{ background: 'rgba(255, 255, 255, 0.25)' }}
             >
-              <div className="flex items-center justify-center gap-4">
-                <span className="text-white text-2xl font-medium">
-                  Find Your Soulmate With Us
-                </span>
-               
+              <span className="text-white font-fjalla-one text-3xl font-medium whitespace-nowrap">
+                Find Your Soulmate With&nbsp;Us
+              </span>
+
+              {/* Heart circle */}
+              <div className="w-[90px] h-[90px] -mr-10 rounded-full bg-white flex items-center justify-center shadow-lg border border-[#FF99FF]">
+                <svg
+                  className="w-10 h-10"
+                  viewBox="0 0 24 24"
+                  fill="#B52558"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path d="M12 21s-4.35-2.54-7.2-5.3C2 13 1 10.54 1 8.5 1 5.42 3.42 3 6.5 3c1.74 0 3.41.81 4.5 2.09C12.09 3.81 13.76 3 15.5 3 18.58 3 21 5.42 21 8.5c0 2.04-1 4.5-3.8 7.2C16.35 18.46 12 21 12 21z" />
+                </svg>
               </div>
             </div>
+
+            {/* Pointer */}
+            <div className="absolute -bottom-4 left-1/2 transform -translate-x-1/2 w-12 h-12 bg-white/25 backdrop-blur-lg border-l border-b border-white/30 rotate-45" />
           </div>
         </div>
       </div>

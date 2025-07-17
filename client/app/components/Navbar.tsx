@@ -7,11 +7,11 @@ export default function Navbar() {
   const router = useRouter();
 
   const handleLogin = () => {
-    router.push('/auth');
+    router.push('/auth?mode=login');
   };
 
   const handleSignup = () => {
-    router.push('/auth');
+    router.push('/auth?mode=signup');
   };
 
   return (
