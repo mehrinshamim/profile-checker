@@ -1,10 +1,53 @@
 "use client";
 import { useState } from "react";
+import { supabase } from "@/app/utils/supabase";
 import Image from "next/image";
 
 export default function PfpRightSide() {
   const [age, setAge] = useState(18);
   const [selected, setSelected] = useState<string[]>([]);
+
+  // form field states
+  const [fullName, setFullName] = useState("");
+  const [workAs, setWorkAs] = useState("");
+  const [lookingFor, setLookingFor] = useState("");
+  const [familyPlan, setFamilyPlan] = useState("");
+  const [relationship, setRelationship] = useState("");
+  const [contactPref, setContactPref] = useState("");
+  const [tagline, setTagline] = useState("");
+
+  const handleSaveProfile = async () => {
+    if (!supabase) return;
+    const {
+      data: { user },
+      error: userErr,
+    } = await supabase.auth.getUser();
+
+    if (userErr || !user) {
+      console.error("No authenticated user found");
+      return;
+    }
+
+    const { error } = await supabase.from("profiles").upsert({
+      id: user.id,
+      full_name: fullName,
+      work_as: workAs,
+      looking_for: lookingFor,
+      family_plan: familyPlan,
+      relationship_status: relationship,
+      texting_calling: contactPref,
+      age,
+      tagline,
+      interests: selected,
+    });
+
+    if (error) {
+      console.error("Error saving profile:", error);
+    } else {
+      console.log("Profile saved / updated");
+    }
+  };
+
   return (
     <div className="relative flex flex-col items-start justify-start pt-10 pl-10 bg-black h-full w-full">
       {/* Upload Photo container */}
@@ -102,6 +145,8 @@ export default function PfpRightSide() {
                 id="name"
                 name="name"
                 type="text"
+                value={fullName}
+                onChange={(e)=>setFullName(e.target.value)}
                 className="block w-full bg-transparent border-0 border-b border-gray-600 focus:border-[#FF99FF] outline-none py-2 mt-2 text-lg"
               />
             </div>
@@ -113,6 +158,8 @@ export default function PfpRightSide() {
                 id="workAs"
                 name="workAs"
                 type="text"
+                value={workAs}
+                onChange={(e)=>setWorkAs(e.target.value)}
                 className="block w-full bg-transparent border-0 border-b border-gray-600 focus:border-[#FF99FF] outline-none py-2 mt-2 text-lg"
               />
             </div>
@@ -124,6 +171,8 @@ export default function PfpRightSide() {
                 id="lookingFor"
                 name="lookingFor"
                 type="text"
+                value={lookingFor}
+                onChange={(e)=>setLookingFor(e.target.value)}
                 className="block w-full bg-transparent border-0 border-b border-gray-600 focus:border-[#FF99FF] outline-none py-2 mt-2 text-lg"
               />
             </div>
@@ -141,6 +190,8 @@ export default function PfpRightSide() {
                 id="familyPlan"
                 name="familyPlan"
                 type="text"
+                value={familyPlan}
+                onChange={(e)=>setFamilyPlan(e.target.value)}
                 className="block w-full bg-transparent border-0 border-b border-gray-600 focus:border-[#FF99FF] outline-none py-2 mt-2 text-lg"
               />
             </div>
@@ -152,6 +203,8 @@ export default function PfpRightSide() {
                 id="relationship"
                 name="relationship"
                 type="text"
+                value={relationship}
+                onChange={(e)=>setRelationship(e.target.value)}
                 className="block w-full bg-transparent border-0 border-b border-gray-600 focus:border-[#FF99FF] outline-none py-2 mt-2 text-lg"
               />
             </div>
@@ -165,6 +218,8 @@ export default function PfpRightSide() {
                 id="contactPref"
                 name="contactPref"
                 type="text"
+                value={contactPref}
+                onChange={(e)=>setContactPref(e.target.value)}
                 className="block w-full bg-transparent border-0 border-b border-gray-600 focus:border-[#FF99FF] outline-none py-2 mt-2 text-lg"
               />
             </div>
@@ -201,9 +256,22 @@ export default function PfpRightSide() {
             type="text"
             name="tagline"
             placeholder="Add A Tagline:"
+            value={tagline}
+            onChange={(e)=>setTagline(e.target.value)}
             className="w-full bg-transparent outline-none placeholder-[#D79DFC] text-[#D79DFC] font-fjalla-one text-2xl"
           />
         </div>
+      </div>
+
+      {/* Save Profile Button (outside preferences) */}
+      <div className="mt-8">
+        <button
+          type="button"
+          onClick={handleSaveProfile}
+          className="px-12 py-3 bg-[#D79DFC] text-white text-xl font-fjalla-one rounded-xl shadow-md hover:bg-[#c26dfc] transition-colors"
+        >
+          Save Profile
+        </button>
       </div>
 
       {/* Interests Selection - positioned to the right */}
@@ -243,12 +311,7 @@ export default function PfpRightSide() {
             ))}
           </div>
 
-          <button
-            type="button"
-            className="mt-8 w-full bg-[#D79DFC] text-white text-xl font-fjalla-one py-3 rounded-xl shadow-md hover:bg-[#c26dfc] transition-colors"
-          >
-            Lock your preferences
-          </button>
+          {/* Button removed from here */}
         </div>
     </div>
   );
