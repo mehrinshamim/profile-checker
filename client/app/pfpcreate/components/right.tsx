@@ -50,7 +50,7 @@ export default function PfpRightSide() {
                 id="name"
                 name="name"
                 type="text"
-                className="block w-full bg-transparent border-b border-gray-600 focus:border-[#FF99FF] outline-none py-2 mt-2 text-lg"
+                className="block w-full bg-transparent border-0 border-b border-gray-600 focus:border-[#FF99FF] outline-none py-2 mt-2 text-lg"
               />
             </div>
 
@@ -61,14 +61,19 @@ export default function PfpRightSide() {
                 id="workAs"
                 name="workAs"
                 type="text"
-                className="block w-full bg-transparent border-b border-gray-600 focus:border-[#FF99FF] outline-none py-2 mt-2 text-lg"
+                className="block w-full bg-transparent border-0 border-b border-gray-600 focus:border-[#FF99FF] outline-none py-2 mt-2 text-lg"
               />
             </div>
 
             {/* Looking For */}
-            <div className="flex flex-col gap-3">
-              <span className="text-2xl text-gray-400">Looking For :</span>
-              
+            <div>
+              <label className="text-2xl text-gray-400" htmlFor="lookingFor">Looking For :</label>
+              <input
+                id="lookingFor"
+                name="lookingFor"
+                type="text"
+                className="block w-full bg-transparent border-0 border-b border-gray-600 focus:border-[#FF99FF] outline-none py-2 mt-2 text-lg"
+              />
             </div>
           </div>
 
@@ -84,7 +89,7 @@ export default function PfpRightSide() {
                 id="familyPlan"
                 name="familyPlan"
                 type="text"
-                className="block w-full bg-transparent border-b border-gray-600 focus:border-[#FF99FF] outline-none py-2 mt-2 text-lg"
+                className="block w-full bg-transparent border-0 border-b border-gray-600 focus:border-[#FF99FF] outline-none py-2 mt-2 text-lg"
               />
             </div>
 
@@ -95,15 +100,21 @@ export default function PfpRightSide() {
                 id="relationship"
                 name="relationship"
                 type="text"
-                className="block w-full bg-transparent border-b border-gray-600 focus:border-[#FF99FF] outline-none py-2 mt-2 text-lg"
+                className="block w-full bg-transparent border-0 border-b border-gray-600 focus:border-[#FF99FF] outline-none py-2 mt-2 text-lg"
               />
             </div>
 
             {/* Removed Hobby and Pet-Peeves per latest requirement */}
 
             {/* Texting / Calling */}
-            <div className="flex flex-col gap-3">
-              <span className="text-2xl text-gray-400">Texting/Calling:</span>
+            <div>
+              <label className="text-2xl text-gray-400" htmlFor="contactPref">Texting/Calling:</label>
+              <input
+                id="contactPref"
+                name="contactPref"
+                type="text"
+                className="block w-full bg-transparent border-0 border-b border-gray-600 focus:border-[#FF99FF] outline-none py-2 mt-2 text-lg"
+              />
             </div>
           </div>
         </div>
