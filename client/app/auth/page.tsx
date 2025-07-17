@@ -1,6 +1,5 @@
 import LeftSide from './components/left';
 import RightSide from './components/right';
-import Image from 'next/image';
 
 export default function AuthPage() {
   return (
