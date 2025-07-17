@@ -1,6 +1,11 @@
+"use client";
 import Image from "next/image";
+import { useRouter } from "next/navigation";
+
 
 export default function Hero() {
+  const router = useRouter();
+  
   return (
     <>
       {/* Hero Section */}
@@ -16,12 +21,12 @@ export default function Hero() {
         </h1>
 
         {/* CTA Button */}
-        <a
-          href="#"
+        <button
+          onClick={() => router.push("/auth")}
           className="font-fjalla-one inline-flex items-center justify-center bg-gradient-to-r from-[#D67BFF] to-[#FF9EFF] text-white font-semibold text-lg sm:text-xl px-10 py-4 rounded-full shadow-md hover:opacity-90 transition-opacity w-max"
         >
           Get started →
-        </a>
+        </button>
 
         {/* Plane with dotted path */}
         <div className="absolute -bottom-70 left-2 z-0">
