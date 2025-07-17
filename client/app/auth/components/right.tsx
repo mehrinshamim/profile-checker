@@ -3,6 +3,8 @@
 import { useState, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
+import { supabase } from '@/app/utils/supabase';
+
 
 export default function RightSide() {
   const router = useRouter();
@@ -17,29 +19,35 @@ export default function RightSide() {
     router.replace(url);
   }, [mode, router]);
 
-  const handleGoogleAuth = async () => {
-    setIsLoading(true);
-    try {
-      // Add your Google OAuth logic here
-      console.log('Initiating Google OAuth...');
-      
-      // Example: Replace with your actual Google OAuth implementation
-      // const result = await signInWithGoogle();
-      // if (result.success) {
-      //   router.push('/dashboard'); // or wherever you want to redirect after auth
-      // }
-      
-      // For now, just simulate loading
-      setTimeout(() => {
-        setIsLoading(false);
-        // Simulate successful auth - redirect to home
-        router.push('/');
-      }, 2000);
-      
-    } catch (error) {
-      console.error('Authentication failed:', error);
-      setIsLoading(false);
+  const googleAuth = async () => {
+    if (!supabase) {
+      console.error('Supabase not initialized');
+      return;
     }
+
+    // If in signup mode, ensure any existing session is cleared so Google screen appears
+    if (mode === 'signup') {
+      await supabase.auth.signOut();
+    }
+
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: 'google',
+      options: {
+        redirectTo: `${window.location.origin}/pfpcreate`,
+        queryParams: { prompt: 'select_account' },
+      }
+    });
+    
+    if(error) {
+      console.log("User not authenticated with Google");
+    } else {
+      console.log("User authenticated with Google");
+    }
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    console.log('Login attempted with:');
   };
 
   return (
@@ -73,7 +81,7 @@ export default function RightSide() {
 
         {/* Google Sign-In Button */}
         <button
-          onClick={handleGoogleAuth}
+          onClick={googleAuth}
           disabled={isLoading}
           className={`w-full bg-white text-gray-800 font-semibold py-4 px-6 rounded-lg shadow-lg hover:shadow-xl transition-all duration-300 flex items-center justify-center gap-3 mb-6 ${
             isLoading ? 'opacity-70 cursor-not-allowed' : 'hover:bg-gray-50'
