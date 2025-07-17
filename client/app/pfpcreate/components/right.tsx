@@ -1,6 +1,9 @@
+"use client";
+import { useState } from "react";
 import Image from "next/image";
 
 export default function PfpRightSide() {
+  const [age, setAge] = useState(18);
   return (
     <div className="flex flex-col items-start justify-start pt-10 pl-10 bg-black h-full w-full">
       {/* Upload Photo container */}
@@ -119,6 +122,25 @@ export default function PfpRightSide() {
           </div>
         </div>
       </form>
+
+      {/* Age Slider */}
+      <div className="mt-10 w-full max-w-md">
+        <label className="text-2xl font-fjalla-one text-[#D79DFC] mb-2 inline-block" htmlFor="ageRange">Age: {age}</label>
+        <input
+          id="ageRange"
+          type="range"
+          min="18"
+          max="80"
+          value={age}
+          onChange={(e) => setAge(parseInt(e.target.value))}
+          className="w-full h-1 bg-[#FBE9FF] rounded-lg appearance-none cursor-pointer"
+          style={{ accentColor: "#FFFFFF" }}
+        />
+        <div className="flex justify-between text-gray-500 mt-1 text-lg w-full">
+          <span>18</span>
+          <span>80</span>
+        </div>
+      </div>
     </div>
   );
 } 
