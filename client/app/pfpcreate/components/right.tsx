@@ -4,8 +4,9 @@ import Image from "next/image";
 
 export default function PfpRightSide() {
   const [age, setAge] = useState(18);
+  const [selected, setSelected] = useState<string[]>([]);
   return (
-    <div className="flex flex-col items-start justify-start pt-10 pl-10 bg-black h-full w-full">
+    <div className="relative flex flex-col items-start justify-start pt-10 pl-10 bg-black h-full w-full">
       {/* Upload Photo container */}
       <div
         className="relative rounded-[30px] overflow-hidden"
@@ -40,6 +41,21 @@ export default function PfpRightSide() {
           </div>
         </div>
       </div>
+
+      {/* Upgrade Account Button */}
+      <button
+        type="button"
+        className="absolute top-[73px] right-10 text-white font-fjalla-one text-xl border border-white"
+        style={{
+          width: "300px",
+          height: "55px",
+          borderRadius: "20px",
+          background: "#CC90DA",
+          boxShadow: "12px 12px 20px 0px #00000040",
+        }}
+      >
+        Upgrade Account
+      </button>
 
       {/* Profile Info Form */}
       <form className="mt-16 w-full max-w-5xl text-white font-fjalla-one">
@@ -156,6 +172,51 @@ export default function PfpRightSide() {
           />
         </div>
       </div>
+
+      {/* Interests Selection - positioned to the right */}
+      <div className="absolute top-[200px] right-10 w-[400px] bg-[#2E2E2E]/70 rounded-2xl p-8 shadow-lg">
+          <h3 className="text-[#D79DFC] text-2xl font-fjalla-one mb-6 leading-snug max-w-sm">
+            Choose Your Interest. Don’t Worry, You Can Always Change It Later
+          </h3>
+
+          <div className="grid grid-cols-3 gap-4">
+            {[
+              "News","Comedy","Society",
+              "Culture","Business","Sport",
+              "Fashion","Art","Drama",
+              "Emotion","Anime","Feminist",
+              "Science","Politics","True Crime",
+              "Tech","Kids","Film&Tv",
+              "Travelling","Nature"
+            ].map((item) => (
+              <button
+                key={item}
+                type="button"
+                onClick={() =>
+                  setSelected((prev) =>
+                    prev.includes(item)
+                      ? prev.filter((i) => i !== item)
+                      : [...prev, item]
+                  )
+                }
+                className={`py-3 px-4 rounded-lg text-xl font-fjalla-one transition-all duration-200 border border-transparent ${
+                  selected.includes(item)
+                    ? 'bg-[#D79DFC] text-black'
+                    : 'bg-[#FFE9FF] text-[#D79DFC] hover:bg-[#FFDBFF]'
+                }`}
+              >
+                {item}
+              </button>
+            ))}
+          </div>
+
+          <button
+            type="button"
+            className="mt-8 w-full bg-[#D79DFC] text-white text-xl font-fjalla-one py-3 rounded-xl shadow-md hover:bg-[#c26dfc] transition-colors"
+          >
+            Lock your preferences
+          </button>
+        </div>
     </div>
   );
 } 
