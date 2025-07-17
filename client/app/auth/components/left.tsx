@@ -73,14 +73,14 @@ export default function LeftSide() {
       
 
       {/* Cat illustration placeholder - will add actual image later */}
-      <div className="absolute bottom-0 right-0">
-        
-      <Image
+      <div className="absolute bottom-0 right-0 ">
+        {/* Cat Image */}
+        <Image
           src="/assets/cats/6.png"
           alt="Cat at boundary"
           width={600}
           height={600}
-          className="object-contain"
+          className="object-contain z-20 relative"
           priority
         />
       </div>
@@ -225,6 +225,18 @@ export default function LeftSide() {
           fill="url(#heartGrad7)"
         />
       </svg>
+      {/* Bottom gradient mountain */}
+      <div className="absolute -bottom-4 left-[-202px] w-[1200px] h-[252px] z-0 pointer-events-none" style={{ filter: 'drop-shadow(0 4px 4px rgba(0,0,0,0.25))' }}>
+        <svg width="1200" height="252" viewBox="0 0 1200 252" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <linearGradient id="mountGrad" x1="0" y1="1" x2="0" y2="0">
+              <stop offset="0%" stopColor="#CC90DA" />
+              <stop offset="100%" stopColor="#FFFBFB" />
+            </linearGradient>
+          </defs>
+          <path d="M0 180 C 200 120 400 160 600 120 C 800 80 1000 140 1200 100 L1200 252 L0 252 Z" fill="url(#mountGrad)" stroke="#000000" strokeWidth="1" />
+        </svg>
+      </div>
     </div>
   );
 } 
