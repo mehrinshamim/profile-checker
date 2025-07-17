@@ -1,4 +1,5 @@
 import LeftSide from "./components/left";
+import RightSide from "./components/right";
 
 const PfpCreate = () => {
   return (
@@ -6,8 +7,8 @@ const PfpCreate = () => {
       {/* Sidebar */}
       <LeftSide />
 
-      {/* Right section placeholder - will be implemented later */}
-      <div className="flex-1 bg-black" />
+      {/* Right section */}
+      <RightSide />
     </div>
   );
 };
