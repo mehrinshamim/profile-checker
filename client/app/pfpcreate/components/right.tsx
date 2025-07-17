@@ -141,6 +141,21 @@ export default function PfpRightSide() {
           <span>80</span>
         </div>
       </div>
+
+      {/* Tagline Input */}
+      <div className="mt-6 w-full max-w-2xl">
+        <div
+          className="w-full rounded-[25px] border border-[#FFFBFB] px-6 py-4"
+          style={{ background: "#D9D9D914" }}
+        >
+          <input
+            type="text"
+            name="tagline"
+            placeholder="Add A Tagline:"
+            className="w-full bg-transparent outline-none placeholder-[#D79DFC] text-[#D79DFC] font-fjalla-one text-2xl"
+          />
+        </div>
+      </div>
     </div>
   );
 } 
