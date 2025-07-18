@@ -19,6 +19,10 @@ export default function PfpRightSide() {
   const [contactPref, setContactPref] = useState("");
   const [tagline, setTagline] = useState("");
 
+  // Validation errors
+  const [errors, setErrors] = useState<Record<string, string>>({});
+  const [showDialog, setShowDialog] = useState(false);
+
   const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file || !supabase) return;
@@ -98,6 +102,27 @@ export default function PfpRightSide() {
 
   const handleSaveProfile = async () => {
     if (!supabase) return;
+
+    // Basic validation
+    const newErrors: Record<string, string> = {};
+    if (!uploadedImage) newErrors.photo = "Photo is required";
+    if (!fullName.trim()) newErrors.fullName = "Name required";
+    if (!workAs.trim()) newErrors.workAs = "Work As required";
+    if (!lookingFor.trim()) newErrors.lookingFor = "Looking For required";
+    if (!familyPlan.trim()) newErrors.familyPlan = "Family Plan required";
+    if (!relationship.trim()) newErrors.relationship = "Relationship Status required";
+    if (!contactPref.trim()) newErrors.contactPref = "Texting/Calling preference required";
+    if (!tagline.trim()) newErrors.tagline = "Tagline required";
+    if (selected.length === 0) newErrors.interests = "Select at least one interest";
+
+    if (Object.keys(newErrors).length > 0) {
+      setErrors(newErrors);
+      setShowDialog(true);
+      return;
+    }
+
+    setErrors({}); // clear errors
+
     const {
       data: { user },
       error: userErr,
@@ -401,6 +426,8 @@ export default function PfpRightSide() {
         >
           Save Profile
         </button>
+
+        {/* Inline error removed; handled by dialog */}
       </div>
 
       {/* Interests Selection - positioned to the right */}
@@ -442,6 +469,35 @@ export default function PfpRightSide() {
 
           {/* Button removed from here */}
         </div>
+      {/* Validation dialog */}
+      {showDialog && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60">
+          <div className="relative bg-[#2E2E2E] border-4 border-[#FF99FF] rounded-2xl p-8 w-[420px] text-center shadow-2xl">
+            <button
+              aria-label="Close dialog"
+              className="absolute top-2 right-3 text-white text-3xl leading-none hover:text-[#D79DFC]"
+              onClick={() => setShowDialog(false)}
+            >
+              &times;
+            </button>
+
+            {/* Cat illustration */}
+            <Image
+              src="/assets/cats/4.png"
+              alt="Cute cat"
+              width={120}
+              height={120}
+              className="mx-auto -mt-24 mb-4 rotate-6"
+              priority
+            />
+
+            <h3 className="text-red-500 font-fjalla-one text-2xl mb-3">Hold on, friend!</h3>
+            <p className="text-red-500 text-lg leading-relaxed">
+              Please complete all required fields, upload a photo and select at least one interest.
+            </p>
+          </div>
+        </div>
+      )}
     </div>
   );
 } 
