@@ -164,18 +164,14 @@ export default function PfpRightSide() {
         <div className="absolute inset-0 flex flex-col items-center justify-center gap-4">
           {uploadedImage ? (
             <>
-              <span className="text-white font-fjalla-one text-3xl">Photo Uploaded!</span>
-              <div className="w-32 h-32 rounded-full overflow-hidden border-4 border-[#FF99FF]">
-                {/* Use native img tag to skip Next.js optimization */}
-                <img
-                  src={uploadedImage ?? ''}
-                  alt="Uploaded profile photo"
-                  className="w-full h-full object-cover"
-                  width={128}
-                  height={128}
-                />
-              </div>
-              <span className="text-white font-fjalla-one text-lg">Click to change photo</span>
+              {/* Full-size uploaded image */}
+              <img
+                src={uploadedImage ?? ''}
+                alt="Uploaded profile photo"
+                className="absolute inset-0 w-full h-full object-cover rounded-[30px] pointer-events-none"
+              />
+
+              {/* Removed overlay text; prompt will be placed below container */}
             </>
           ) : (
             <>
@@ -201,6 +197,22 @@ export default function PfpRightSide() {
           )}
         </div>
       </div>
+
+      {/* Prompt placed below the upload container */}
+      {uploadedImage && (
+        <div
+          className="mt-4 self-center"
+          style={{ width: "500px" }}
+        >
+          <button
+            type="button"
+            onClick={() => fileInputRef.current?.click()}
+            className="w-full rounded-[25px] border border-[#FFFBFB] bg-[#D9D9D914] text-[#D79DFC] font-fjalla-one text-2xl py-3 hover:bg-[#c26dfc]/20 transition-colors items-center justify-center"
+          >
+            Click to change photo
+          </button>
+        </div>
+      )}
 
       {/* Top Action Bar */}
       <div className="absolute top-[73px] right-10 flex items-center gap-5">
