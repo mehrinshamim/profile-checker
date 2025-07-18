@@ -6,8 +6,6 @@ export default function AuthPage() {
     <div className="min-h-screen flex relative">
       <LeftSide />
       <RightSide />
-    
-     
     </div>
   );
 } 
