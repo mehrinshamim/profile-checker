@@ -17,6 +17,14 @@ export default function PfpCreate() {
         data: { user },
       } = await supabase.auth.getUser();
 
+      // Log the access token if available
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+      if (session?.access_token) {
+        console.log('Access token:', session.access_token);
+      }
+
       if (!user) {
         // No logged-in user, send to auth page
         router.push("/auth");
