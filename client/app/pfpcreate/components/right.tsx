@@ -1,13 +1,15 @@
 "use client";
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { supabase } from "@/app/utils/supabase";
 import Image from "next/image";
+import { useRouter } from "next/navigation";
 
 export default function PfpRightSide() {
   const [age, setAge] = useState(18);
   const [selected, setSelected] = useState<string[]>([]);
   const [uploadedImage, setUploadedImage] = useState<string | null>(null);
   const [isUploading, setIsUploading] = useState(false);
+  const router = useRouter();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // form field states
@@ -18,6 +20,55 @@ export default function PfpRightSide() {
   const [relationship, setRelationship] = useState("");
   const [contactPref, setContactPref] = useState("");
   const [tagline, setTagline] = useState("");
+
+  // Fetch existing profile data on mount
+  useEffect(() => {
+    const fetchProfile = async () => {
+      if (!supabase) return;
+
+      // Get current user
+      const {
+        data: { user },
+        error: userErr,
+      } = await supabase.auth.getUser();
+
+      if (userErr || !user) return;
+
+      // Fetch profile data
+      const { data: profileData } = await supabase
+        .from("profiles")
+        .select(
+          "full_name, work_as, looking_for, family_plan, relationship_status, texting_calling, age, tagline, interests"
+        )
+        .eq("id", user.id)
+        .single();
+
+      if (profileData) {
+        setFullName(profileData.full_name ?? "");
+        setWorkAs(profileData.work_as ?? "");
+        setLookingFor(profileData.looking_for ?? "");
+        setFamilyPlan(profileData.family_plan ?? "");
+        setRelationship(profileData.relationship_status ?? "");
+        setContactPref(profileData.texting_calling ?? "");
+        setAge(profileData.age ?? 18);
+        setTagline(profileData.tagline ?? "");
+        setSelected(profileData.interests ?? []);
+      }
+
+      // Fetch profile photo URL
+      const { data: urlData } = await supabase
+        .from("profileurl")
+        .select("photo_url")
+        .eq("user_id", user.id)
+        .single();
+
+      if (urlData?.photo_url) {
+        setUploadedImage(urlData.photo_url);
+      }
+    };
+
+    fetchProfile();
+  }, []);
 
   // Validation errors
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -144,13 +195,13 @@ export default function PfpRightSide() {
       age,
       tagline,
       interests: selected,
-      photo_url: uploadedImage, // Add photo URL to profile
     });
 
     if (error) {
       console.error("Error saving profile:", error);
     } else {
       console.log("Profile saved / updated");
+      router.push("/dashboard");
     }
   };
 
@@ -403,7 +454,7 @@ export default function PfpRightSide() {
       {/* Tagline Input */}
       <div className="mt-6 w-full max-w-2xl">
         <div
-          className="w-full rounded-[25px] border border-[#FFFBFB] px-6 py-4"
+          className="w-full rounded-[25px] px-6 py-4"
           style={{ background: "#D9D9D914" }}
         >
           <input
