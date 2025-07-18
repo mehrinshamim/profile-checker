@@ -30,9 +30,12 @@ const leagueSpartan = League_Spartan({
   weight: ["100", "200", "300", "400", "500", "600", "700", "800", "900"],
 });
 
-  export const metadata: Metadata = {
+export const metadata: Metadata = {
   title: "MISMATCHED",
-  description: "Verify dating profiles, detect red flags, and date with confidence. Stay protected with MISMATCHED."
+  description: "Verify dating profiles, detect red flags, and date with confidence. Stay protected with MISMATCHED.",
+  icons: {
+    icon: '/favicon.ico',
+  },
 };
 
 export default function RootLayout({
