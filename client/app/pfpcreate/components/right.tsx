@@ -1,11 +1,14 @@
 "use client";
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { supabase } from "@/app/utils/supabase";
 import Image from "next/image";
 
 export default function PfpRightSide() {
   const [age, setAge] = useState(18);
   const [selected, setSelected] = useState<string[]>([]);
+  const [uploadedImage, setUploadedImage] = useState<string | null>(null);
+  const [isUploading, setIsUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   // form field states
   const [fullName, setFullName] = useState("");
@@ -15,6 +18,63 @@ export default function PfpRightSide() {
   const [relationship, setRelationship] = useState("");
   const [contactPref, setContactPref] = useState("");
   const [tagline, setTagline] = useState("");
+
+  const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file || !supabase) return;
+
+    setIsUploading(true);
+    
+    try {
+      const {
+        data: { user },
+        error: userErr,
+      } = await supabase.auth.getUser();
+
+      if (userErr || !user) {
+        console.error("No authenticated user found");
+        return;
+      }
+
+      // Create a unique filename using user.id
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${user.id}.${fileExt}`;
+
+      // First, try to delete existing file if it exists
+      try {
+        await supabase.storage.from('photos').remove([fileName]);
+      } catch (error) {
+        // File doesn't exist, which is fine
+      }
+
+      // Upload to Supabase storage bucket named 'photos'
+      const { data, error } = await supabase.storage
+        .from('photos')
+        .upload(fileName, file, {
+          cacheControl: '3600',
+          upsert: false // Don't use upsert, we'll handle it manually
+        });
+
+      if (error) {
+        console.error("Error uploading file:", error);
+        alert("Upload failed. Please check your Supabase storage policies.");
+        return;
+      }
+
+      // Get the public URL
+      const { data: { publicUrl } } = supabase.storage
+        .from('photos')
+        .getPublicUrl(fileName);
+
+      setUploadedImage(publicUrl);
+      console.log("File uploaded successfully:", publicUrl);
+    } catch (error) {
+      console.error("Error during upload:", error);
+      alert("Upload failed. Please try again.");
+    } finally {
+      setIsUploading(false);
+    }
+  };
 
   const handleSaveProfile = async () => {
     if (!supabase) return;
@@ -39,6 +99,7 @@ export default function PfpRightSide() {
       age,
       tagline,
       interests: selected,
+      photo_url: uploadedImage, // Add photo URL to profile
     });
 
     if (error) {
@@ -52,13 +113,14 @@ export default function PfpRightSide() {
     <div className="relative flex flex-col items-start justify-start pt-10 pl-10 bg-black h-full w-full">
       {/* Upload Photo container */}
       <div
-        className="relative mx-60 rounded-[30px] overflow-hidden"
+        className="relative mx-60 rounded-[30px] overflow-hidden cursor-pointer"
         style={{
           width: "581px",
           height: "450px",
           boxShadow: "12px 4px 4px 0px #FBE9FF",
           backdropFilter: "blur(4px)",
         }}
+        onClick={() => fileInputRef.current?.click()}
       >
         {/* Background image */}
         <Image
@@ -69,19 +131,54 @@ export default function PfpRightSide() {
           priority
         />
 
+        {/* Hidden file input */}
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept="image/*"
+          onChange={handleFileUpload}
+          className="hidden"
+        />
+
         {/* Centered overlay text & icon */}
         <div className="absolute inset-0 flex flex-col items-center justify-center gap-4">
-          <span className="text-white font-fjalla-one text-3xl">Upload Photo</span>
-          <div className="w-16 h-16 rounded-full bg-white flex items-center justify-center border border-[#FF99FF]">
-            <svg
-              className="w-8 h-8"
-              viewBox="0 0 24 24"
-              fill="#B52558"
-              xmlns="http://www.w3.org/2000/svg"
-            >
-              <path d="M12 21s-4.35-2.54-7.2-5.3C2 13 1 10.54 1 8.5 1 5.42 3.42 3 6.5 3c1.74 0 3.41.81 4.5 2.09C12.09 3.81 13.76 3 15.5 3 18.58 3 21 5.42 21 8.5c0 2.04-1 4.5-3.8 7.2C16.35 18.46 12 21 12 21z" />
-            </svg>
-          </div>
+          {uploadedImage ? (
+            <>
+              <span className="text-white font-fjalla-one text-3xl">Photo Uploaded!</span>
+              <div className="w-32 h-32 rounded-full overflow-hidden border-4 border-[#FF99FF]">
+                {/* Use native img tag to skip Next.js optimization */}
+                <img
+                  src={uploadedImage ?? ''}
+                  alt="Uploaded profile photo"
+                  className="w-full h-full object-cover"
+                  width={128}
+                  height={128}
+                />
+              </div>
+              <span className="text-white font-fjalla-one text-lg">Click to change photo</span>
+            </>
+          ) : (
+            <>
+              <span className="text-white font-fjalla-one text-3xl">
+                {isUploading ? "Uploading..." : "Upload Photo"}
+              </span>
+              <div className="w-16 h-16 rounded-full bg-white flex items-center justify-center border border-[#FF99FF]">
+                {isUploading ? (
+                  <div className="w-8 h-8 border-2 border-[#B52558] border-t-transparent rounded-full animate-spin"></div>
+                ) : (
+                  <svg
+                    className="w-8 h-8"
+                    viewBox="0 0 24 24"
+                    fill="#B52558"
+                    xmlns="http://www.w3.org/2000/svg"
+                  >
+                    <path d="M12 21s-4.35-2.54-7.2-5.3C2 13 1 10.54 1 8.5 1 5.42 3.42 3 6.5 3c1.74 0 3.41.81 4.5 2.09C12.09 3.81 13.76 3 15.5 3 18.58 3 21 5.42 21 8.5c0 2.04-1 4.5-3.8 7.2C16.35 18.46 12 21 12 21z" />
+                  </svg>
+                )}
+              </div>
+              <span className="text-white font-fjalla-one text-lg">Click to upload</span>
+            </>
+          )}
         </div>
       </div>
 
