@@ -61,13 +61,33 @@ export default function PfpRightSide() {
         return;
       }
 
-      // Get the public URL
-      const { data: { publicUrl } } = supabase.storage
+      // Generate a signed URL valid for 1 year (31536000 seconds)
+      const { data: signedData, error: signedErr } = await supabase.storage
         .from('photos')
-        .getPublicUrl(fileName);
+        .createSignedUrl(fileName, 60 * 60 * 24 * 365);
 
-      setUploadedImage(publicUrl);
-      console.log("File uploaded successfully:", publicUrl);
+      if (signedErr || !signedData) {
+        console.error('Error generating signed URL:', signedErr);
+        return;
+      }
+
+      const signedUrl = signedData.signedUrl;
+
+      setUploadedImage(signedUrl);
+      console.log('File uploaded successfully. Signed URL:', signedUrl);
+
+      // Upsert into profileurl table (insert if new, update if exists) with signed URL
+      try {
+        const { error: upsertErr } = await supabase
+          .from('profileurl')
+          .upsert({ user_id: user.id, photo_url: signedUrl });
+
+        if (upsertErr) {
+          console.error('Error updating profileurl table:', upsertErr);
+        }
+      } catch (tblErr) {
+        console.error('Unexpected error updating profileurl table:', tblErr);
+      }
     } catch (error) {
       console.error("Error during upload:", error);
       alert("Upload failed. Please try again.");
