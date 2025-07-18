@@ -26,7 +26,7 @@ const Dashboard = () => {
 
   return (
     <div className="flex">
-      <LeftSide onSettingsClick={() => setActiveSection("settings")} />
+      <LeftSide activeSection={activeSection} onSectionChange={setActiveSection} />
       <RightSide
         activeSection={activeSection}
         onEditProfile={handleEditProfile}
