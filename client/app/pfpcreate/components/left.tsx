@@ -6,7 +6,7 @@ export default function PfpLeftSide() {
 
   return (
     <div
-      className="relative flex flex-col justify-between w-[350px] h-screen overflow-hidden"
+      className="relative flex flex-col justify-between w-[400px] h-screen overflow-hidden"
       style={{ background: "#CC90DA" }}
     >
       {/* Noise texture overlay */}

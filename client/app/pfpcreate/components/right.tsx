@@ -1,11 +1,14 @@
 "use client";
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { supabase } from "@/app/utils/supabase";
 import Image from "next/image";
 
 export default function PfpRightSide() {
   const [age, setAge] = useState(18);
   const [selected, setSelected] = useState<string[]>([]);
+  const [uploadedImage, setUploadedImage] = useState<string | null>(null);
+  const [isUploading, setIsUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   // form field states
   const [fullName, setFullName] = useState("");
@@ -16,8 +19,110 @@ export default function PfpRightSide() {
   const [contactPref, setContactPref] = useState("");
   const [tagline, setTagline] = useState("");
 
+  // Validation errors
+  const [errors, setErrors] = useState<Record<string, string>>({});
+  const [showDialog, setShowDialog] = useState(false);
+
+  const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file || !supabase) return;
+
+    setIsUploading(true);
+    
+    try {
+      const {
+        data: { user },
+        error: userErr,
+      } = await supabase.auth.getUser();
+
+      if (userErr || !user) {
+        console.error("No authenticated user found");
+        return;
+      }
+
+      // Create a unique filename using user.id
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${user.id}.${fileExt}`;
+
+      // First, try to delete existing file if it exists
+      try {
+        await supabase.storage.from('photos').remove([fileName]);
+      } catch (error) {
+        // File doesn't exist, which is fine
+      }
+
+      // Upload to Supabase storage bucket named 'photos'
+      const { data, error } = await supabase.storage
+        .from('photos')
+        .upload(fileName, file, {
+          cacheControl: '3600',
+          upsert: false // Don't use upsert, we'll handle it manually
+        });
+
+      if (error) {
+        console.error("Error uploading file:", error);
+        alert("Upload failed. Please check your Supabase storage policies.");
+        return;
+      }
+
+      // Generate a signed URL valid for 1 year (31536000 seconds)
+      const { data: signedData, error: signedErr } = await supabase.storage
+        .from('photos')
+        .createSignedUrl(fileName, 60 * 60 * 24 * 365);
+
+      if (signedErr || !signedData) {
+        console.error('Error generating signed URL:', signedErr);
+        return;
+      }
+
+      const signedUrl = signedData.signedUrl;
+
+      setUploadedImage(signedUrl);
+      console.log('File uploaded successfully. Signed URL:', signedUrl);
+
+      // Upsert into profileurl table (insert if new, update if exists) with signed URL
+      try {
+        const { error: upsertErr } = await supabase
+          .from('profileurl')
+          .upsert({ user_id: user.id, photo_url: signedUrl });
+
+        if (upsertErr) {
+          console.error('Error updating profileurl table:', upsertErr);
+        }
+      } catch (tblErr) {
+        console.error('Unexpected error updating profileurl table:', tblErr);
+      }
+    } catch (error) {
+      console.error("Error during upload:", error);
+      alert("Upload failed. Please try again.");
+    } finally {
+      setIsUploading(false);
+    }
+  };
+
   const handleSaveProfile = async () => {
     if (!supabase) return;
+
+    // Basic validation
+    const newErrors: Record<string, string> = {};
+    if (!uploadedImage) newErrors.photo = "Photo is required";
+    if (!fullName.trim()) newErrors.fullName = "Name required";
+    if (!workAs.trim()) newErrors.workAs = "Work As required";
+    if (!lookingFor.trim()) newErrors.lookingFor = "Looking For required";
+    if (!familyPlan.trim()) newErrors.familyPlan = "Family Plan required";
+    if (!relationship.trim()) newErrors.relationship = "Relationship Status required";
+    if (!contactPref.trim()) newErrors.contactPref = "Texting/Calling preference required";
+    if (!tagline.trim()) newErrors.tagline = "Tagline required";
+    if (selected.length === 0) newErrors.interests = "Select at least one interest";
+
+    if (Object.keys(newErrors).length > 0) {
+      setErrors(newErrors);
+      setShowDialog(true);
+      return;
+    }
+
+    setErrors({}); // clear errors
+
     const {
       data: { user },
       error: userErr,
@@ -39,6 +144,7 @@ export default function PfpRightSide() {
       age,
       tagline,
       interests: selected,
+      photo_url: uploadedImage, // Add photo URL to profile
     });
 
     if (error) {
@@ -52,13 +158,14 @@ export default function PfpRightSide() {
     <div className="relative flex flex-col items-start justify-start pt-10 pl-10 bg-black h-full w-full">
       {/* Upload Photo container */}
       <div
-        className="relative mx-60 rounded-[30px] overflow-hidden"
+        className="relative mx-60 rounded-[30px] overflow-hidden cursor-pointer"
         style={{
           width: "581px",
           height: "450px",
           boxShadow: "12px 4px 4px 0px #FBE9FF",
           backdropFilter: "blur(4px)",
         }}
+        onClick={() => fileInputRef.current?.click()}
       >
         {/* Background image */}
         <Image
@@ -69,21 +176,68 @@ export default function PfpRightSide() {
           priority
         />
 
+        {/* Hidden file input */}
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept="image/*"
+          onChange={handleFileUpload}
+          className="hidden"
+        />
+
         {/* Centered overlay text & icon */}
         <div className="absolute inset-0 flex flex-col items-center justify-center gap-4">
-          <span className="text-white font-fjalla-one text-3xl">Upload Photo</span>
-          <div className="w-16 h-16 rounded-full bg-white flex items-center justify-center border border-[#FF99FF]">
-            <svg
-              className="w-8 h-8"
-              viewBox="0 0 24 24"
-              fill="#B52558"
-              xmlns="http://www.w3.org/2000/svg"
-            >
-              <path d="M12 21s-4.35-2.54-7.2-5.3C2 13 1 10.54 1 8.5 1 5.42 3.42 3 6.5 3c1.74 0 3.41.81 4.5 2.09C12.09 3.81 13.76 3 15.5 3 18.58 3 21 5.42 21 8.5c0 2.04-1 4.5-3.8 7.2C16.35 18.46 12 21 12 21z" />
-            </svg>
-          </div>
+          {uploadedImage ? (
+            <>
+              {/* Full-size uploaded image */}
+              <img
+                src={uploadedImage ?? ''}
+                alt="Uploaded profile photo"
+                className="absolute inset-0 w-full h-full object-cover rounded-[30px] pointer-events-none"
+              />
+
+              {/* Removed overlay text; prompt will be placed below container */}
+            </>
+          ) : (
+            <>
+              <span className="text-white font-fjalla-one text-3xl">
+                {isUploading ? "Uploading..." : "Upload Photo"}
+              </span>
+              <div className="w-16 h-16 rounded-full bg-white flex items-center justify-center border border-[#FF99FF]">
+                {isUploading ? (
+                  <div className="w-8 h-8 border-2 border-[#B52558] border-t-transparent rounded-full animate-spin"></div>
+                ) : (
+                  <svg
+                    className="w-8 h-8"
+                    viewBox="0 0 24 24"
+                    fill="#B52558"
+                    xmlns="http://www.w3.org/2000/svg"
+                  >
+                    <path d="M12 21s-4.35-2.54-7.2-5.3C2 13 1 10.54 1 8.5 1 5.42 3.42 3 6.5 3c1.74 0 3.41.81 4.5 2.09C12.09 3.81 13.76 3 15.5 3 18.58 3 21 5.42 21 8.5c0 2.04-1 4.5-3.8 7.2C16.35 18.46 12 21 12 21z" />
+                  </svg>
+                )}
+              </div>
+              <span className="text-white font-fjalla-one text-lg">Click to upload</span>
+            </>
+          )}
         </div>
       </div>
+
+      {/* Prompt placed below the upload container */}
+      {uploadedImage && (
+        <div
+          className="mt-4 self-center"
+          style={{ width: "500px" }}
+        >
+          <button
+            type="button"
+            onClick={() => fileInputRef.current?.click()}
+            className="w-full rounded-[25px] border border-[#FFFBFB] bg-[#D9D9D914] text-[#D79DFC] font-fjalla-one text-2xl py-3 hover:bg-[#c26dfc]/20 transition-colors items-center justify-center"
+          >
+            Click to change photo
+          </button>
+        </div>
+      )}
 
       {/* Top Action Bar */}
       <div className="absolute top-[73px] right-10 flex items-center gap-5">
@@ -272,6 +426,8 @@ export default function PfpRightSide() {
         >
           Save Profile
         </button>
+
+        {/* Inline error removed; handled by dialog */}
       </div>
 
       {/* Interests Selection - positioned to the right */}
@@ -313,6 +469,35 @@ export default function PfpRightSide() {
 
           {/* Button removed from here */}
         </div>
+      {/* Validation dialog */}
+      {showDialog && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60">
+          <div className="relative bg-[#2E2E2E] border-4 border-[#FF99FF] rounded-2xl p-8 w-[420px] text-center shadow-2xl">
+            <button
+              aria-label="Close dialog"
+              className="absolute top-2 right-3 text-white text-3xl leading-none hover:text-[#D79DFC]"
+              onClick={() => setShowDialog(false)}
+            >
+              &times;
+            </button>
+
+            {/* Cat illustration */}
+            <Image
+              src="/assets/cats/4.png"
+              alt="Cute cat"
+              width={120}
+              height={120}
+              className="mx-auto -mt-24 mb-4 rotate-6"
+              priority
+            />
+
+            <h3 className="text-red-500 font-fjalla-one text-2xl mb-3">Hold on, friend!</h3>
+            <p className="text-red-500 text-lg leading-relaxed">
+              Please complete all required fields, upload a photo and select at least one interest.
+            </p>
+          </div>
+        </div>
+      )}
     </div>
   );
 } 
