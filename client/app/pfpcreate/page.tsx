@@ -1,11 +1,11 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useEffect, useState, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { supabase } from "@/app/utils/supabase";
 import LeftSide from "./components/left";
 import RightSide from "./components/right";
 
-export default function PfpCreate() {
+function PfpCreateContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const isEdit = searchParams.get('edit') === 'true';
@@ -70,5 +70,17 @@ export default function PfpCreate() {
       {/* Right section */}
       <RightSide />
     </div>
+  );
+}
+
+export default function PfpCreate() {
+  return (
+    <Suspense fallback={
+      <div className="w-full h-screen flex items-center justify-center text-white bg-black">
+        Loading...
+      </div>
+    }>
+      <PfpCreateContent />
+    </Suspense>
   );
 }   
