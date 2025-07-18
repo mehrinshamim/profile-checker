@@ -1,6 +1,6 @@
 import streamlit as st
 from streamlit_folium import folium_static
-from services.gvision_folium_service import (
+from app.services.gvision_folium_service import (
     load_credentials, prepare_image, detect_landmarks, detect_logos,
     detect_objects, detect_web_entities, create_folium_map, detect_text
 )
