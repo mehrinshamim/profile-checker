@@ -201,7 +201,7 @@ export default function PfpRightSide() {
       console.error("Error saving profile:", error);
     } else {
       console.log("Profile saved / updated");
-      //router.push("/dashboard");
+      router.push("/dashboard");
     }
   };
 
