@@ -1,12 +1,14 @@
 "use client";
 import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { supabase } from "@/app/utils/supabase";
 import LeftSide from "./components/left";
 import RightSide from "./components/right";
 
 export default function PfpCreate() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const isEdit = searchParams.get('edit') === 'true';
   const [checking, setChecking] = useState(true);
 
   useEffect(() => {
@@ -38,7 +40,12 @@ export default function PfpCreate() {
         .single();
 
       if (profile) {
-        router.push("/dashboard");
+        if (isEdit) {
+          // stay on page to edit profile
+          setChecking(false);
+        } else {
+          router.push("/dashboard");
+        }
       } else {
         setChecking(false); // stay on page to complete profile
       }

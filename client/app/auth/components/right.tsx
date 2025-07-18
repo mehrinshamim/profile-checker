@@ -1,5 +1,4 @@
 'use client';
-
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
@@ -16,7 +15,6 @@ export default function RightSide() {
       return;
     }
 
-    const { createClient } = await import('@supabase/supabase-js');
 
     const { error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
@@ -33,10 +31,7 @@ export default function RightSide() {
     }
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    console.log('Login attempted with:');
-  };
+  
 
   return (
     <div className="w-1/2 bg-black flex items-center justify-center p-8">
