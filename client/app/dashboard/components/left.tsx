@@ -1,6 +1,6 @@
 import Image from "next/image";
 
-type Section = "profile" | "users" | "settings";
+type Section = "profile" | "users" | "matches";
 
 interface LeftSideProps {
   activeSection: Section;
@@ -68,17 +68,21 @@ export default function LeftSide({ activeSection, onSectionChange }: LeftSidePro
           <span className="text-white font-medium font-fjalla">Users</span>
         </div>
 
-        {/* Settings */}
+        {/* Matches */}
         <div
-          onClick={() => onSectionChange("settings")}
+          onClick={() => onSectionChange("matches")}
           className={`flex items-center gap-3 px-4 py-3 rounded-lg cursor-pointer transition-colors ${
-            activeSection === "settings" ? "bg-white/20" : "hover:bg-white/10"
+            activeSection === "matches" ? "bg-white/20" : "hover:bg-white/10"
           }`}
         >
-          <svg className="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 20 20">
-            <path fillRule="evenodd" d="M11.49 3.17c-.38-1.56-2.6-1.56-2.98 0a1.532 1.532 0 01-2.286.948c-1.372-.836-2.942.734-2.106 2.106.54.886.061 2.042-.947 2.287-1.561.379-1.561 2.6 0 2.978a1.532 1.532 0 01.947 2.287c-.836 1.372.734 2.942 2.106 2.106a1.532 1.532 0 012.287.947c.379 1.561 2.6 1.561 2.978 0a1.533 1.533 0 012.287-.947c1.372.836 2.942-.734 2.106-2.106a1.533 1.533 0 01.947-2.287c1.561-.379 1.561-2.6 0-2.978a1.532 1.532 0 01-.947-2.287c.836-1.372-.734-2.942-2.106-2.106a1.532 1.532 0 01-2.287-.947zM10 13a3 3 0 100-6 3 3 0 000 6z" clipRule="evenodd" />
+          <svg
+            className="w-5 h-5 text-white"
+            fill="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" />
           </svg>
-          <span className="text-white font-medium font-fjalla">Settings</span>
+          <span className="text-white font-medium font-fjalla">Matches</span>
         </div>
       </div>
 

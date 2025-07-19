@@ -75,7 +75,18 @@ const Users: React.FC = () => {
   };
 
   const handleAccept = () => {
-    // TODO: perform match / like logic here
+    if (currentProfile) {
+      try {
+        const existing = JSON.parse(localStorage.getItem("matches") || "[]");
+        // avoid duplicates by id
+        const exists = existing.find((m: any) => m.id === currentProfile.id);
+        if (!exists) {
+          localStorage.setItem("matches", JSON.stringify([...existing, currentProfile]));
+        }
+      } catch (err) {
+        console.error("Unable to save match to localStorage", err);
+      }
+    }
     handleNext();
   };
 

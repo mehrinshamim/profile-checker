@@ -5,8 +5,9 @@ interface SettingsProps {
 }
 
 const Settings: React.FC<SettingsProps> = ({ onEditProfile }) => {
+  // Additional settings-related state can be added here
   return (
-    <div className="flex-1 p-12 text-white font-fjalla-one">
+    <div className="flex-1 p-12 text-white font-fjalla-one overflow-y-auto">
       <h2 className="text-3xl mb-8">Settings</h2>
 
       <div className="flex flex-col gap-6 max-w-sm">
@@ -28,7 +29,11 @@ const Settings: React.FC<SettingsProps> = ({ onEditProfile }) => {
         >
           Account Preferences
         </button>
+
+        {/* Other settings options go here */}
       </div>
+
+      {/* Other settings options go here */}
     </div>
   );
 };
