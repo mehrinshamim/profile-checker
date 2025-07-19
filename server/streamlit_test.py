@@ -4,8 +4,8 @@ from app.services.gvision_folium_service import (
     load_credentials, prepare_image, detect_landmarks, detect_logos,
     detect_objects, detect_web_entities, create_folium_map, detect_text
 )
-from services.metadataanalysis import ImageMetadataPIIAnalyzer,create_metadata_map
-from services.gemini_agent import GeminiAgent  # <-- Add this import
+from app.services.metadata_analysis import ImageMetadataPIIAnalyzer,create_metadata_map
+from app.services.gemini_agent import GeminiAgent  # <-- Add this import
 import xyzservices.providers as xyz
 import folium
 import io

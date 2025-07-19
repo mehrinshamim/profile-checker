@@ -7,3 +7,4 @@ Pillow
 xyzservices
 opencv-python
 google-generativeai
+numpy<2

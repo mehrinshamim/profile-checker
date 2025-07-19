@@ -2,7 +2,6 @@
 import requests
 from typing import Dict, List, Any
 import streamlit as st
-
 class SerpService:
     def __init__(self, api_key: str):
         self.api_key = api_key

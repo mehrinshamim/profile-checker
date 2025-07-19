@@ -11,7 +11,7 @@ import re
 from datetime import datetime
 from PIL.ExifTags import TAGS, GPSTAGS
 from typing import Dict, List
-from .metadataanalysis import ImageMetadataPIIAnalyzer
+from .metadata_analysis import ImageMetadataPIIAnalyzer
 
 def load_credentials(config_file):
     credentials = service_account.Credentials.from_service_account_info(json.load(config_file))
