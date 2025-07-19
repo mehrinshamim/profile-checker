@@ -12,6 +12,7 @@
   --font-mono: var(--font-geist-mono);
   --font-marcellus: var(--font-marcellus);
   --font-fjalla-one: var(--font-fjalla-one);
+  --font-league-spartan: var(--font-league-spartan);
 }
 
 @media (prefers-color-scheme: dark) {
