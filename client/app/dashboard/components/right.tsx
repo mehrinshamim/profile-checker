@@ -1,17 +1,14 @@
 import React from "react";
-import Settings from "./settings";
 import Users from "./users";
 import MyProfile from "./myprofile";
+import Matches from "./matches";
 
 interface RightSideProps {
-  activeSection: "profile" | "users" | "settings";
-  onEditProfile: () => void;
+  activeSection: "profile" | "users" | "matches";
 }
 
-const RightSide: React.FC<RightSideProps> = ({ activeSection, onEditProfile }) => {
-  if (activeSection === "settings") {
-    return <Settings onEditProfile={onEditProfile} />;
-  }
+const RightSide: React.FC<RightSideProps> = ({ activeSection }) => {
+  // settings removed
 
   if (activeSection === "profile") {
     return <MyProfile />;
@@ -19,6 +16,10 @@ const RightSide: React.FC<RightSideProps> = ({ activeSection, onEditProfile }) =
 
   if (activeSection === "users") {
     return <Users />;
+  }
+
+  if (activeSection === "matches") {
+    return <Matches />;
   }
 
   // Placeholder for other sections

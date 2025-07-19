@@ -3,7 +3,17 @@ import google.generativeai as genai
 from typing import Dict, List, Any, Optional
 import json
 import re
-import streamlit as st
+# Optional Streamlit – fallback to no-op functions when not present
+try:
+    import streamlit as st  # type: ignore
+except ModuleNotFoundError:  # running outside Streamlit
+    class _NoStreamlit:
+        def __getattr__(self, name):
+            def _noop(*args, **kwargs):
+                return None
+            return _noop
+
+    st = _NoStreamlit()  # type: ignore
 from .serp_service import SerpService
 
 class GeminiAgent:
