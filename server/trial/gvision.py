@@ -1,7 +1,7 @@
 import io
 import cv2
 import numpy as np
-import streamlit as st
+import server.streamlit_test as st
 from google.cloud import vision
 from google.cloud.vision_v1 import types
 from google.oauth2 import service_account

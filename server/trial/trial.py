@@ -2,7 +2,7 @@ import io
 import json
 import cv2
 import numpy as np
-import streamlit as st
+import server.streamlit_test as st
 from PIL import Image
 import folium
 from streamlit_folium import folium_static
