@@ -5,6 +5,5 @@ streamlit-folium
 folium
 Pillow
 xyzservices
-opencv-python
+# opencv-python
 google-generativeai
-numpy<2
