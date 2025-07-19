@@ -1,7 +1,17 @@
 # services/serp_service.py
 import requests
 from typing import Dict, List, Any
-import streamlit as st
+
+# Optional streamlit fallback
+try:
+    import streamlit as st  # type: ignore
+except ModuleNotFoundError:
+    class _NoSt:
+        def __getattr__(self, _):
+            return lambda *a, **k: None
+
+    st = _NoSt()  # type: ignore
+
 class SerpService:
     def __init__(self, api_key: str):
         self.api_key = api_key

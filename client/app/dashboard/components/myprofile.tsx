@@ -75,7 +75,7 @@ const MyProfile: React.FC = () => {
     <div className="flex-1 flex justify-center p-8 overflow-y-auto">
       <div className="flex flex-col gap-8 max-w-4xl w-full ">
         {/* Header */}
-        <div className="bg-white rounded-3xl overflow-hidden flex text-black min-h-[300px]">
+        <div className="bg-white rounded-3xl overflow-hidden flex text-black min-h-[300px] relative">
           {/* photo */}
           {profile.photo_url && (
             <img
@@ -93,6 +93,14 @@ const MyProfile: React.FC = () => {
             {profile.tagline && (
               <p className="text-lg text-black font-semibold mb-6 font-league-spartan">"{profile.tagline}"</p>
             )}
+
+            {/* Edit button */}
+            <button
+              onClick={() => window.location.href = "/pfpcreate?edit=true"}
+              className="absolute top-4 right-4 px-4 py-2 bg-[#D79DFC] text-black rounded-lg shadow hover:bg-[#c26dfc] transition-colors font-league-spartan"
+            >
+              Edit Profile
+            </button>
 
             {/* Interests */}
             <div className="flex flex-wrap gap-3">
