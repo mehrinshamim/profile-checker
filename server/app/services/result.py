@@ -5,6 +5,9 @@ from app.services.gvision_folium_service import (
 from app.services.metadata_analysis import ImageMetadataPIIAnalyzer
 from app.services.gemini_agent import GeminiAgent
 
+from dotenv import load_dotenv 
+load_dotenv() 
+
 def aggregate_image_analysis(
     image_bytes,
     vision_client,
