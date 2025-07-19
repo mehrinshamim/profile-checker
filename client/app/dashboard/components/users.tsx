@@ -1,65 +1,74 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import { supabase } from "@/app/utils/supabase";
 
 const Users: React.FC = () => {
-  const sampleUsers = [
-    {
-      id: 1,
-      name: "Sarah Johnson",
-      age: 28,
-      photo: "/assets/cats/1.png",
-      work: "Designer",
-      interests: ["Movies", "Art", "Cycling"],
-    },
-    {
-      id: 2,
-      name: "Mike Chen",
-      age: 32,
-      photo: "/assets/cats/2.png",
-      work: "Engineer",
-      interests: ["Hiking", "Gaming", "Cooking"],
-    },
-    {
-      id: 3,
-      name: "Emma Davis",
-      age: 25,
-      photo: "/assets/cats/3.png",
-      work: "Teacher",
-      interests: ["Reading", "Travel", "Yoga"],
-    },
-    {
-      id: 4,
-      name: "Alex Rodriguez",
-      age: 30,
-      photo: "/assets/cats/4.png",
-      work: "Doctor",
-      interests: ["Coffee", "Running", "Photography"],
-    },
-    {
-      id: 5,
-      name: "Lisa Wang",
-      age: 27,
-      photo: "/assets/cats/5.png",
-      work: "Artist",
-      interests: ["Painting", "Museums", "Cats"],
-    },
-    {
-      id: 6,
-      name: "David Kim",
-      age: 29,
-      photo: "/assets/cats/6.png",
-      work: "Chef",
-      interests: ["Food", "Travel", "Basketball"],
-    },
-    // Remaining users kept simple
-    { id: 7, name: "Jessica Brown", age: 26, photo: "/assets/cats/1.png", work: "Marketing", interests: ["Running"] },
-    { id: 8, name: "Ryan Wilson", age: 31, photo: "/assets/cats/2.png", work: "Lawyer", interests: ["Golf"] },
-    { id: 9, name: "Amanda Lee", age: 24, photo: "/assets/cats/3.png", work: "Nurse", interests: ["Yoga"] },
-    { id: 10, name: "Chris Martinez", age: 33, photo: "/assets/cats/4.png", work: "Architect", interests: ["Drawing"] },
-  ];
+  // State to hold profiles fetched from Supabase
+  const [users, setUsers] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  // Fetch profiles (excluding current user) on mount
+  useEffect(() => {
+    const fetchProfiles = async () => {
+      if (!supabase) {
+        setLoading(false);
+        return;
+      }
+
+      // Get current logged-in user
+      const {
+        data: { user: currentUser },
+      } = await supabase.auth.getUser();
+
+      if (!currentUser) {
+        setLoading(false);
+        return;
+      }
+
+      const { data, error } = await supabase
+        .from("profiles")
+        .select("id, full_name, work_as, age, interests")
+        .neq("id", currentUser.id);
+
+      if (!error && data) {
+        // Fetch profile photos in batch
+        const ids = data.map((p: any) => p.id);
+        let photoMap: Record<string, string> = {};
+
+        if (ids.length) {
+          const { data: urlRows } = await supabase
+            .from('profileurl')
+            .select('user_id, photo_url')
+            .in('user_id', ids);
+
+          if (urlRows) {
+            photoMap = urlRows.reduce((acc: any, row: any) => {
+              acc[row.user_id] = row.photo_url;
+              return acc;
+            }, {});
+          }
+        }
+
+        // Map DB fields to UI expected fields
+        const mapped = data.map((p: any) => ({
+          id: p.id,
+          name: p.full_name || "Unknown",
+          age: p.age || "",
+          work: p.work_as || "",
+          interests: p.interests || [],
+          photo: photoMap[p.id] || "/assets/cats/1.png", // fallback image
+        }));
+        setUsers(mapped);
+      }
+
+      setLoading(false);
+    };
+
+    fetchProfiles();
+  }, []);
 
   const [currentIndex, setCurrentIndex] = useState(0);
 
-  const currentUser = sampleUsers[currentIndex];
+  const currentProfile = users[currentIndex];
 
   const handleNext = () => {
     setCurrentIndex((prev) => prev + 1);
@@ -150,27 +159,34 @@ const Users: React.FC = () => {
       </svg>
       <h2 className="text-3xl mb-8 text-[#D79DFC] font-fjalla-one">Find Your Perfect Match</h2>
 
-      {currentUser ? (
+      {loading ? (
+        <p className="text-white font-league-spartan">Loading...</p>
+      ) : currentProfile ? (
         <>
           {/* Card */}
           <div className="w-[28rem] bg-white rounded-3xl shadow-2xl overflow-hidden">
             {/* Photo */}
             <img
-              src={currentUser.photo}
-              alt={currentUser.name}
+              src={currentProfile.photo}
+              alt={currentProfile.name}
               className="w-full h-80 object-cover" />
 
             {/* Info section */}
             <div className="p-6 text-black font-league-spartan">
-              <h3 className="text-2xl font-bold mb-1">
-                {currentUser.name}, {currentUser.age}
+              <h3 className="text-2xl font-bold">
+                {currentProfile.name}
               </h3>
-              <p className="text-sm text-gray-500 mb-4">{currentUser.work}</p>
+              {currentProfile.age && (
+                <p className="text-lg text-gray-700 mb-1">{currentProfile.age}</p>
+              )}
+              {currentProfile.work && (
+                <p className="text-sm text-gray-500 mb-4">{currentProfile.work}</p>
+              )}
 
               {/* Interests */}
-              {currentUser.interests && (
+              {currentProfile.interests && currentProfile.interests.length > 0 && (
                 <div className="flex flex-wrap gap-2">
-                  {currentUser.interests.map((interest: string) => (
+                  {currentProfile.interests.map((interest: string) => (
                     <span
                       key={interest}
                       className="px-3 py-1 bg-[#FFE9FF] text-[#D79DFC] rounded-full text-xs font-semibold"
