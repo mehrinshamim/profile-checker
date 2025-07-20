@@ -3,10 +3,10 @@ from app.util.auth import get_current_user, UserData
 from ..services.supabase_service import supabase
 from app.services.result import (
     aggregate_image_analysis,
-    summarize_vulnerabilities_with_gemini,
+    summarize_vulnerabilities,  # Change this import
+    generate_safety_alert,      # Add this import
 )
 from app.services.gvision_folium_service import load_credentials, prepare_image
-from app.services.gemini_agent import GeminiAgent
 
 import os, io
 import base64
@@ -58,18 +58,17 @@ async def analyze_image(
     body: UserIdRequest,
     current_user: UserData = Depends(get_current_user),
 ):
-    """Aggregate Google Vision, Gemini AI, and metadata analysis for the given user's profile photo."""
+    """Aggregate Google Vision and Gemini AI analysis for the given user's profile photo."""
 
     # 1. Fetch raw image bytes from Supabase storage
     photo_bytes = fetch_photo_bytes(body.userid)
 
-    # 2. Build Vision client from base64 encoded credentials in env
+    # 2. Build Vision client from base64 encoded credentials
     credentials_base64 = os.getenv("GOOGLE_APPLICATION_CREDENTIALS")
     if not credentials_base64:
         raise HTTPException(status_code=500, detail="Google Vision credentials not configured")
 
     try:
-        # Decode base64 credentials and create client
         credentials_json = json.loads(base64.b64decode(credentials_base64))
         client = load_credentials(io.BytesIO(json.dumps(credentials_json).encode()))
     except Exception as e:
@@ -78,25 +77,20 @@ async def analyze_image(
     # 3. Prepare image for Vision API
     image_bytes, vision_image, pil_image = prepare_image(io.BytesIO(photo_bytes))
 
-    # 4. Gemini agent (optional)
-    gemini_key = os.getenv("GEMINI_API_KEY")
-    serp_key = os.getenv("SERP_API_KEY")
-    gemini_agent = None
-    if gemini_key and serp_key:
-        gemini_agent = GeminiAgent(gemini_key, serp_key)
-
-    # 5. Aggregate analysis
+    # 4. Aggregate analysis (without gemini_agent)
     agg_result = aggregate_image_analysis(
         image_bytes,
         client,
         vision_image,
         pil_image,
-        gemini_agent,
+        None  # Remove gemini_agent
     )
 
-    # 6. Optional summary via Gemini
+    # 5. Generate summary using direct Gemini integration
     summary = None
-    if gemini_agent:
-        summary = summarize_vulnerabilities_with_gemini(agg_result, gemini_agent)
+    try:
+        summary = summarize_vulnerabilities(agg_result)
+    except Exception as e:
+        print(f"Warning: Could not generate summary: {str(e)}")
 
     return {"analysis": agg_result, "summary": summary}

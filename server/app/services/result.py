@@ -1,12 +1,28 @@
 from app.services.gvision_folium_service import (
-    detect_landmarks, detect_logos,# detect_objects,
-    detect_web_entities, detect_text
+    detect_landmarks, detect_logos,
+    detect_web_entities, detect_text,
+    load_credentials, prepare_image
 )
 from app.services.metadata_analysis import ImageMetadataPIIAnalyzer
-from app.services.gemini_agent import GeminiAgent
+import google.generativeai as genai
+from dotenv import load_dotenv
+import os
+import json
+import io
+import base64
 
-from dotenv import load_dotenv 
-load_dotenv() 
+# Initialize Gemini
+load_dotenv()
+genai.configure(api_key=os.getenv("GEMINI_API_KEY"))
+model = genai.GenerativeModel('gemini-1.5-flash')
+
+def generate_safety_alert(prompt):
+    """Generate safety alert using Gemini directly"""
+    try:
+        response = model.generate_content(prompt)
+        return response.text
+    except Exception as e:
+        return f"Error generating alert: {str(e)}"
 
 def aggregate_image_analysis(
     image_bytes,
@@ -74,79 +90,127 @@ def aggregate_image_analysis(
         "domains": list(set(domains)),
         "pii_risk_summary": pii_result.get("risk_assessment", {}) if pii_result else {},
     }
+def summarize_vulnerabilities(agg_result):
+    """
+    Generate a user-friendly privacy alert message using Gemini.
+    Prompt includes few-shot examples for more structured output.
+    """
+    summary_prompt = f"""
+You are the privacy safety assistant for a dating app called **MISMATCHED**. Your job is to alert users if their profile photo could reveal their real-world identity. Write in a clear, emoji-enhanced, non-technical tone.
 
-def summarize_vulnerabilities_with_gemini(agg_result, gemini_agent: GeminiAgent):
-    """
-    Use GeminiAgent to summarize vulnerabilities and sources/domains.
-    """
-    summary_prompt = (
-        "Summarize the following image analysis vulnerabilities and sources/domains. "
-        "List the main risks, and mention the domains/links where information can be found. "
-        "Here is the data:\n"
-        f"Vulnerabilities: {agg_result['vulnerabilities']}\n"
-        f"Sources: {agg_result['sources']}\n"
-        f"Domains: {agg_result['domains']}\n"
-        f"PII Risk Summary: {agg_result['pii_risk_summary']}\n"
-    )
-    summary = gemini_agent.quick_analyze(summary_prompt)
-    return summary
+Your response should follow this format:
+🚨 Privacy Alert: Profile Photo Risk Detected 🚨
+
+🔍 What We Found:
+- (List of sites the photo appears on)
+- (Metadata or visible personal info: names, affiliations, etc.)
+- (Mentions of photographers or visible places/logos)
+- (Any text that could identify user)
+
+📡 Risk Level: (Low / Elevated / High) — explain briefly
+
+⚠️ What You Should Do:
+- (2-3 clear safety tips)
+
+🛡️ End with a short digital safety reminder.
+
+---
+
+📌 **Example 1:**
+
+🚨 Privacy Alert: Profile Photo Risk Detected 🚨
+
+Your current profile photo may expose personally identifiable information.
+
+🔍 What We Found:
+- Your photo was found on:
+  • LinkedIn  
+  • Resume-hosting site ResumeNest  
+- Metadata includes name: *Nandini V. Roy*
+- Associated with: Internship at GovTech India
+
+📡 Risk Level: **High**  
+This image is linked to your professional identity and can be reverse-searched.
+
+⚠️ What You Should Do:
+- 🔁 Use a photo not uploaded elsewhere  
+- ✂️ Remove metadata or watermarks  
+- 🔒 Tighten privacy settings on professional profiles
+
+🛡️ Remember: A photo can be a breadcrumb to your real-world identity.
+
+---
+
+📌 **Example 2:**
+
+🚨 Privacy Alert: Profile Photo Risk Detected 🚨
+
+🔍 What We Found:
+- Your profile image appears on:
+  • Your college website  
+  • A national-level hackathon gallery  
+- Photographer: *Rishi K Mehta*
+- Visible logo: *IIT-Ropar Hack 2024*
+
+📡 Risk Level: **Elevated**  
+While not directly named, this image is traceable through events and logos.
+
+⚠️ What You Should Do:
+- Switch to a neutral, privately-taken photo  
+- Avoid event backgrounds or college shirts  
+- Check reverse image visibility via Google Lens
+
+🛡️ Digital clues add up — protect your privacy from unwanted exposure.
+
+---
+
+📌 **Now generate a personalized alert for this user:**
+
+Vulnerabilities Found: {agg_result['vulnerabilities']}  
+Image Found On: {agg_result['sources']}  
+Websites: {agg_result['domains']}  
+Personal Info Risks: {agg_result['pii_risk_summary']}  
+"""
+
+    return generate_safety_alert(summary_prompt)
+
 
 def test_aggregate_and_summarize():
-    """
-    Interactive test function to aggregate and summarize vulnerabilities for a given image path.
-    Prompts user for image path and credentials path, and loads Gemini/Serp API keys from environment.
-    """
-    import os
-    import json
-    import io
+    """Interactive test function"""
+    load_dotenv()
+    
+    credentials_base64 = os.getenv("GOOGLE_APPLICATION_CREDENTIALS")
 
-    # Get API keys from environment variables
-    gemini_api_key = os.getenv("GEMINI_API_KEY")
-    serp_api_key = os.getenv("SERP_API_KEY")
-
-    if not gemini_api_key or not serp_api_key:
-        print("Please set GEMINI_API_KEY and SERP_API_KEY in your environment (.env file).")
+    if not credentials_base64:
+        print("Missing Google credentials")
         return
 
-    # Prompt user for image and credentials path
     image_path = input("Enter the path to the image file: ").strip()
-    credentials_path = input("Enter the path to the Google Vision API credentials JSON file: ").strip()
-
-    # Load credentials
-    from app.services.gvision_folium_service import load_credentials, prepare_image
-    from app.services.gemini_agent import GeminiAgent
 
     try:
-        with open(credentials_path, "r") as f:
-            credentials_json = json.load(f)
+        # Decode and load credentials
+        credentials_json = json.loads(base64.b64decode(credentials_base64))
         client = load_credentials(io.BytesIO(json.dumps(credentials_json).encode()))
-    except Exception as e:
-        print(f"Error loading credentials: {e}")
-        return
 
-    # Load image
-    try:
+        # Load and prepare image
         with open(image_path, "rb") as img_file:
             image_bytes, vision_image, pil_image = prepare_image(io.BytesIO(img_file.read()))
+
+        # Aggregate results without Gemini agent
+        agg_result = aggregate_image_analysis(
+            image_bytes, client, vision_image, pil_image, None
+        )
+
+        # Generate summary
+        summary = summarize_vulnerabilities(agg_result)
+
+        print("\nAggregated Result:")
+        print(json.dumps(agg_result, indent=2))
+        print("\nSafety Alert:")
+        print(summary)
+
     except Exception as e:
-        print(f"Error loading image: {e}")
-        return
-
-    # Create Gemini agent
-    gemini_agent = GeminiAgent(gemini_api_key, serp_api_key)
-
-    # Aggregate results
-    agg_result = aggregate_image_analysis(
-        image_bytes, client, vision_image, pil_image, gemini_agent
-    )
-
-    # Summarize vulnerabilities
-    summary = summarize_vulnerabilities_with_gemini(agg_result, gemini_agent)
-
-    print("Aggregated Result:")
-    print(agg_result)
-    print("\nGemini Summary:")
-    print(summary)
+        print(f"Error: {str(e)}")
 
 if __name__ == "__main__":
     test_aggregate_and_summarize()
