@@ -1,21 +1,25 @@
 from fastapi import APIRouter, Depends, HTTPException, Request
 from app.util.auth import get_current_user, UserData
 from ..services.supabase_service import supabase
-from ..services.gvision_folium_service import (
-    load_credentials, prepare_image, detect_landmarks, detect_logos,
-    detect_objects, detect_web_entities, detect_text
+from app.services.result import (
+    aggregate_image_analysis,
+    summarize_vulnerabilities_with_gemini,
 )
-from ..services.metadata_analysis import ImageMetadataPIIAnalyzer, create_metadata_map
-from ..services.gemini_agent import GeminiAgent
+from app.services.gvision_folium_service import load_credentials, prepare_image
+from app.services.gemini_agent import GeminiAgent
+
+import os, io
+import base64
+import json
 from pydantic import BaseModel
 import requests
-import io
 
 
 router = APIRouter()
 
 class UserIdRequest(BaseModel):
     userid: str
+
 
 @router.post("/get-photo-url")
 async def get_photo_url(
@@ -47,44 +51,52 @@ def fetch_photo_bytes(user_id: str) -> bytes:
     else:
         raise HTTPException(status_code=400, detail="Could not fetch photo from URL")
 
-class AnalyzeRequest(BaseModel):
-    userid: str
-    gemini_api_key: str = None
-    serp_api_key: str = None
 
-@router.post("/analyze-photo")
-async def analyze_photo(
-    body: AnalyzeRequest,
-    current_user: UserData = Depends(get_current_user)
+
+@router.post("/analyze-image")
+async def analyze_image(
+    body: UserIdRequest,
+    current_user: UserData = Depends(get_current_user),
 ):
-    # Get photo bytes
-    image_bytes = fetch_photo_bytes(body.userid)
-    # Prepare image for analysis
-    _, vision_image, pil_image = prepare_image(io.BytesIO(image_bytes))
-    # Load credentials (adjust as needed for your setup)
-    # client = load_credentials(...)  # You may need to fetch credentials per user/session
+    """Aggregate Google Vision, Gemini AI, and metadata analysis for the given user's profile photo."""
 
-    # Run analyses (assuming you have a client object)
-    # landmarks = detect_landmarks(client, vision_image)
-    # logos = detect_logos(client, vision_image)
-    # objects, np_image = detect_objects(client, vision_image, image_bytes)
-    # web_data = detect_web_entities(client, vision_image)
-    # text_annots = detect_text(client, vision_image)
-    # extracted_text = text_annots[0].description if text_annots else ""
+    # 1. Fetch raw image bytes from Supabase storage
+    photo_bytes = fetch_photo_bytes(body.userid)
 
-    # analyzer = ImageMetadataPIIAnalyzer()
-    # analysis_result = analyzer.analyze_comprehensive_pii(image_bytes)
+    # 2. Build Vision client from base64 encoded credentials in env
+    credentials_base64 = os.getenv("GOOGLE_APPLICATION_CREDENTIALS")
+    if not credentials_base64:
+        raise HTTPException(status_code=500, detail="Google Vision credentials not configured")
 
-    # Return results (fill in with actual analysis results)
-    return {
-        "message": "Analysis results here",
-        # "landmarks": ...,
-        # "logos": ...,
-        # "objects": ...,
-        # "web_entities": ...,
-        # "extracted_text": ...,
-        # "pii_analysis": ...,
-    }
+    try:
+        # Decode base64 credentials and create client
+        credentials_json = json.loads(base64.b64decode(credentials_base64))
+        client = load_credentials(io.BytesIO(json.dumps(credentials_json).encode()))
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to decode credentials: {str(e)}")
 
+    # 3. Prepare image for Vision API
+    image_bytes, vision_image, pil_image = prepare_image(io.BytesIO(photo_bytes))
 
+    # 4. Gemini agent (optional)
+    gemini_key = os.getenv("GEMINI_API_KEY")
+    serp_key = os.getenv("SERP_API_KEY")
+    gemini_agent = None
+    if gemini_key and serp_key:
+        gemini_agent = GeminiAgent(gemini_key, serp_key)
 
+    # 5. Aggregate analysis
+    agg_result = aggregate_image_analysis(
+        image_bytes,
+        client,
+        vision_image,
+        pil_image,
+        gemini_agent,
+    )
+
+    # 6. Optional summary via Gemini
+    summary = None
+    if gemini_agent:
+        summary = summarize_vulnerabilities_with_gemini(agg_result, gemini_agent)
+
+    return {"analysis": agg_result, "summary": summary}
